@@ -57,7 +57,7 @@ jobs:
       - run:
           name: Push Docker image
           command: |
-            docker push "$DOCKER_USERNAME/my-app"
+            docker push "$DOCKER_USERNAME/my-app:$CIRCLE_SHA1"
 
 workflows:
   build_test_and_push:
