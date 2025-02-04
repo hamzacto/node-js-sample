@@ -52,7 +52,7 @@ jobs:
       - run:
           name: Docker Hub Login
           command: |
-            echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USER" --password-stdin
+            echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
 
       # Build the Docker image with a tag that includes the commit SHA.
       - run:
