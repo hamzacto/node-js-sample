@@ -42,7 +42,7 @@ jobs:
       - run:
           name: Test Application Response
           command: |
-            RESPONSE=$(curl --write-out "%{http_code}" --silent --output /dev/null http://host.docker.internal:8080)
+            RESPONSE=$(curl --write-out "%{http_code}" --silent --output /dev/null http://localhost:8080)
             if [ "$RESPONSE" -ne 200 ]; then
               echo "Test failed, expected 200 but got $RESPONSE"
               exit 1
