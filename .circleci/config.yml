@@ -56,7 +56,7 @@ jobs:
       - run:
           name: Tag Image
           command: |
-            docker tag my-app:latest "$DOCKER_USERNAME/my-app:$CIRCLE_SHA1"
+            docker tag my-app "$DOCKER_USERNAME/my-app:$CIRCLE_SHA1"
 
       - run:
           name: Docker images list
