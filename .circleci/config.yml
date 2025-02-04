@@ -52,12 +52,7 @@ jobs:
           name: Docker images list
           command: |
             docker images
-
-      - run:
-          name: Tag Image
-          command: |
-            docker tag my-app "$DOCKER_USERNAME/my-app:$CIRCLE_SHA1"
-
+      
       - run:
           name: Docker images list
           command: |
@@ -68,7 +63,7 @@ jobs:
       - run:
           name: Push Docker image
           command: |
-            docker push $DOCKER_USERNAME/my-app:$CIRCLE_SHA1
+            docker push $DOCKER_USERNAME/my-app
 
 workflows:
   build_test_and_push:
