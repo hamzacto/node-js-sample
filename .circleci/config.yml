@@ -1,62 +1,47 @@
 version: 2.1
-
-executors:
-  docker-executor:
-    docker:
-      - image: circleci/python:3.8  # or any other base image you need
-    working_directory: ~/repo
+orbs:
+  docker: circleci/docker@3.1.1
 
 jobs:
-  setup:
+  build-test-and-push:
     docker:
-      - image: circleci/python:3.8
+      - image: cimg/base:2024.01
+    environment:
+      DOCKER_IMAGE_NAME: my-app
     steps:
       - checkout
+      - setup_remote_docker
+      
+      # Build Docker image
+      - docker/build:
+          image: $DOCKERHUB_USERNAME/$DOCKER_IMAGE_NAME
+          tag: "latest,${CIRCLE_SHA1}"
+          dockerfile: Dockerfile
+      
+      # Test running container
       - run:
-          name: Update apt-get and install Docker
-          command: |
-            sudo apt-get update
-            sudo apt-get install -y apt-transport-https ca-certificates curl gnupg lsb-release
-            curl -fsSL https://get.docker.com -o get-docker.sh
-            sudo sh get-docker.sh
-            sudo systemctl start docker
-            sudo systemctl enable docker
-            sudo systemctl status docker
-            sudo usermod -aG docker $USER
-            newgrp docker
-
-  build:
-    docker:
-      - image: circleci/python:3.8
-    steps:
-      - checkout
+          name: Run container
+          command: docker run -d --name my-app $DOCKERHUB_USERNAME/$DOCKER_IMAGE_NAME:latest
       - run:
-          name: Build Docker Image
-          command: |
-            docker build -t my-app .
+          name: Wait for container startup
+          command: sleep 5
       - run:
-          name: Run Docker Container
+          name: Verify container health
           command: |
-            docker run -d -p 8080:8080 my-app
-      - run:
-          name: Wait for Service to Start
-          command: |
-            sleep 10  # Adjust this for your application's startup time
-      - run:
-          name: Test Application Response
-          command: |
-            curl -f http://localhost:8080 || exit 1
-      - run:
-          name: Push Docker Image to Docker Hub
-          command: |
-            docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
-            docker push my-app
+            CONTAINER_IP=$(docker inspect -f '{{range.NetworkSettings.Networks}}{{.IPAddress}}{{end}}' my-app)
+            curl -sS --retry 3 --retry-delay 5 http://$CONTAINER_IP:8080/health-check
+      
+      # Push to Docker Hub
+      - docker/login:
+          username: $DOCKERHUB_USERNAME
+          password: $DOCKERHUB_PASSWORD
+      - docker/push:
+          image: $DOCKERHUB_USERNAME/$DOCKER_IMAGE_NAME
+          tag: "latest,${CIRCLE_SHA1}"
 
 workflows:
-  version: 2
-  build_and_deploy:
+  main:
     jobs:
-      - setup
-      - build:
-          requires:
-            - setup
+      - build-test-and-push:
+          context: 
+            - dockerhub-creds
