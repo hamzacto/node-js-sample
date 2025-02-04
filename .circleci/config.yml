@@ -58,13 +58,13 @@ jobs:
       - run:
           name: Build Docker image for push
           command: |
-            docker build -t "$DOCKERHUB_USER/my-app:$CIRCLE_SHA1" .
+            docker build -t "$DOCKER_USERNAME/my-app:$CIRCLE_SHA1" .
 
       # Push the Docker image to Docker Hub.
       - run:
           name: Push Docker image
           command: |
-            docker push "$DOCKERHUB_USER/my-app:$CIRCLE_SHA1"
+            docker push "$DOCKER_USERNAME/my-app:$CIRCLE_SHA1"
 
 workflows:
   build_test_and_push:
