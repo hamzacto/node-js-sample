@@ -4,7 +4,7 @@ jobs:
   build:
     # Use the machine executor to run on a full VM instead of inside a Docker container.
     machine:
-      image: ubuntu-2204:2024.11.1
+      image: ubuntu-2004:202010-01
     steps:
       - checkout
 
