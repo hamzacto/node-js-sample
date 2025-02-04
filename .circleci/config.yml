@@ -63,7 +63,7 @@ jobs:
       - run:
           name: Push Docker image
           command: |
-            docker push my-app
+            docker push hamzaelmokadem/my-app
 
 workflows:
   build_test_and_push:
