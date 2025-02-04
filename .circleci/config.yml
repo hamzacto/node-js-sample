@@ -58,7 +58,7 @@ jobs:
       - run:
           name: Docker images list
           command: |
-            docker images" .
+            docker images
 
       - run:
           name: Build Docker image for push
