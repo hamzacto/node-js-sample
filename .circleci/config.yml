@@ -2,7 +2,6 @@ version: 2.1
 
 jobs:
   build:
-    # Use the machine executor to run on a full VM instead of inside a Docker container.
     machine:
       image: default
     steps:
@@ -25,17 +24,18 @@ jobs:
           name: Wait for container startup
           command: sleep 5
 
-      # Test that the application responds correctly on the expected route.
+      # Test that the home page returns content containing "Express".
       - run:
-          name: Test container endpoint
+          name: Test home endpoint
           command: |
-            RESPONSE=$(curl -s http://localhost:8080/your_route)
+            RESPONSE=$(curl -s http://localhost:8080/)
             echo "Response: $RESPONSE"
-            if [ "$RESPONSE" != "expected_output" ]; then
-              echo "Test failed: Expected 'expected_output' but got '$RESPONSE'"
+            # Check if the response contains "Express" (adjust as needed)
+            echo "$RESPONSE" | grep -q "Express" || {
+              echo "Test failed: 'Express' not found in response"
               docker logs my-app-instance
               exit 1
-            fi
+            }
 
       # Stop the container after testing.
       - run:
