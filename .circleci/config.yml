@@ -2,35 +2,30 @@ version: 2.1
 
 jobs:
   build:
-    docker:
-      - image: cimg/base:stable  # Use a basic image with Docker CLI installed.
+    # Use the machine executor to run on a full VM instead of inside a Docker container.
+    machine:
+      image: ubuntu-2004:202010-01
     steps:
       - checkout
 
-      # Enable Docker layer caching by setting up remote Docker.
-      - setup_remote_docker:
-          version: 20.10.7
-
-      # Build the Docker image from your Dockerfile.
+      # Build the Docker image using your Dockerfile.
       - run:
           name: Build Docker image
           command: |
             docker build -t my-app:latest .
 
-      # Run the container in detached mode.
+      # Start the container in detached mode.
       - run:
           name: Start Docker container
           command: |
             docker run -d --rm -p 8080:8080 --name my-app-instance my-app:latest
 
-      # Wait a few seconds to ensure the container is up and running.
+      # Wait a few seconds to allow the container to start.
       - run:
           name: Wait for container startup
           command: sleep 5
 
-      # Test that the application is responding on the expected route.
-      # Replace 'http://localhost:8080/your_route' with your endpoint and
-      # 'expected_output' with the response you expect.
+      # Test that the application responds correctly on the expected route.
       - run:
           name: Test container endpoint
           command: |
@@ -48,28 +43,24 @@ jobs:
           command: docker stop my-app-instance
 
   push:
-    docker:
-      - image: cimg/base:stable
+    machine:
+      image: ubuntu-2004:202010-01
     steps:
       - checkout
 
-      # Set up Docker in Docker.
-      - setup_remote_docker:
-          version: 20.10.7
-
-      # Log in to Docker Hub using the environment variables.
+      # Log in to Docker Hub using environment variables.
       - run:
           name: Docker Hub Login
           command: |
             echo "$DOCKERHUB_PASS" | docker login -u "$DOCKERHUB_USER" --password-stdin
 
-      # Build the image with a tag that includes the commit SHA.
+      # Build the Docker image with a tag that includes the commit SHA.
       - run:
           name: Build Docker image for push
           command: |
             docker build -t "$DOCKERHUB_USER/my-app:$CIRCLE_SHA1" .
 
-      # Push the image to Docker Hub.
+      # Push the Docker image to Docker Hub.
       - run:
           name: Push Docker image
           command: |
@@ -80,6 +71,5 @@ workflows:
     jobs:
       - build
       - push:
-          # The push job only runs if the build job succeeds.
           requires:
             - build
