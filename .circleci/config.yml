@@ -52,7 +52,12 @@ jobs:
           name: Docker images list
           command: |
             docker images
-      
+
+      - run:
+          name: Docker tag
+          command: |
+            docker tag my-app:latest hamzaelmokadem/my-app
+  
       - run:
           name: Docker images list
           command: |
