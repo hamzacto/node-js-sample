@@ -1,0 +1,78 @@
+version: 2.1
+
+executors:
+  docker-executor:
+    docker:
+      - image: cimg/base:stable  # Image CircleCI de base
+
+jobs:
+  build:
+    executor: docker-executor
+    steps:
+      - checkout  # Récupération du code source
+
+      - setup_remote_docker  # Activation de Docker dans CircleCI
+
+      - run:
+          name: Build Docker Image
+          command: docker build -t my-app .
+
+  test:
+    executor: docker-executor
+    steps:
+      - checkout
+      - setup_remote_docker
+
+      - run:
+          name: Build Docker Image
+          command: docker build -t my-app .
+
+      - run:
+          name: Run Docker Container
+          command: docker run -d -p 8080:8080 --name test-container my-app
+
+      - run:
+          name: Wait for Service to Start
+          command: sleep 5  # Attente pour que l’app démarre
+
+      - run:
+          name: Test Application Response
+          command: |
+            RESPONSE=$(curl --write-out "%{http_code}" --silent --output /dev/null http://localhost:8080)
+            if [ "$RESPONSE" -ne 200 ]; then
+              echo "Test failed, expected 200 but got $RESPONSE"
+              exit 1
+            fi
+            echo "Test passed!"
+
+  deploy:
+    executor: docker-executor
+    steps:
+      - checkout
+      - setup_remote_docker
+
+      - run:
+          name: Build Docker Image
+          command: docker build -t my-app .
+
+      - run:
+          name: Push Docker Image to DockerHub
+          command: |
+            echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+            docker tag my-app $DOCKER_USERNAME/my-app:latest
+            docker push $DOCKER_USERNAME/my-app:latest
+
+workflows:
+  version: 2
+  build-test-deploy:
+    jobs:
+      - build
+      - test:
+          requires:
+            - build
+      - deploy:
+          requires:
+            - test
+          filters:
+            branches:
+              only: main
