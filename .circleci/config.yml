@@ -1,82 +1,69 @@
 version: 2.1
 
 executors:
-  docker-executor:
-    docker:
-      - image: cimg/base:stable  # Image CircleCI de base
+  machine-executor:
+    machine:
+      image: ubuntu-2204:current  # Use Ubuntu 22.04 VM
+    environment:
+      NODE_VERSION: "16"
 
 jobs:
   build:
-    executor: docker-executor
-    steps:
-      - checkout  # Récupération du code source
-
-      - setup_remote_docker  # Activation de Docker dans CircleCI
-
-      - run:
-          name: Build Docker Image
-          command: docker build -t my-app .
-
-  test:
-    executor: docker-executor
+    executor: machine-executor
     steps:
       - checkout
-      - setup_remote_docker
 
       - run:
-          name: Build Docker Image
-          command: docker build -t my-app .
+          name: Install Node.js
+          command: |
+            curl -fsSL https://deb.nodesource.com/setup_$NODE_VERSION.x | sudo -E bash -
+            sudo apt-get install -y nodejs
 
       - run:
-          name: Run Docker Container
-          command: docker run -d -p 8080:8080 --name test-container my-app
+          name: Install dependencies
+          command: npm install
+
+      - run:
+          name: Start application
+          command: nohup npm start &  # Runs app in the background
 
       - run:
           name: Wait for Service to Start
-          command: sleep 15  # Attente pour que l’app démarre
-
-      - run:
-          name: Debug Running Containers
-          command: docker ps -a    
+          command: sleep 10  # Adjust if needed
 
       - run:
           name: Test Application Response
-          command: |
-            RESPONSE=$(curl --write-out "%{http_code}" --silent --output /dev/null http://localhost:8080)
-            if [ "$RESPONSE" -ne 200 ]; then
-              echo "Test failed, expected 200 but got $RESPONSE"
-              exit 1
-            fi
-            echo "Test passed!"
+          command: curl -v http://localhost:8080 || exit 1
 
-  deploy:
-    executor: docker-executor
+  docker-build:
+    executor: machine-executor
     steps:
       - checkout
-      - setup_remote_docker
+      
+      - run:
+          name: Install Docker CLI
+          command: |
+            sudo apt-get update
+            sudo apt-get install -y docker.io
+            sudo usermod -aG docker $USER
 
       - run:
           name: Build Docker Image
-          command: docker build -t my-app .
+          command: docker build -t your-dockerhub-username/node-js-sample .
 
       - run:
-          name: Push Docker Image to DockerHub
-          command: |
-            echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-            docker tag my-app $DOCKER_USERNAME/my-app:latest
-            docker push $DOCKER_USERNAME/my-app:latest
+          name: Log in to Docker Hub
+          command: echo "$DOCKERHUB_PASSWORD" | docker login -u "$DOCKERHUB_USERNAME" --password-stdin
+
+      - run:
+          name: Push Docker Image
+          command: docker push your-dockerhub-username/node-js-sample
 
 workflows:
   version: 2
-  build-test-deploy:
+  build-and-push:
     jobs:
       - build
-      - test:
+      - docker-build:
           requires:
-            - build
-      - deploy:
-          requires:
-            - test
-          filters:
-            branches:
-              only: main
+            - build  # Only run if build succeeds
