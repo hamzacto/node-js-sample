@@ -16,8 +16,9 @@ jobs:
           name: Update apt-get and install Docker
           command: |
             sudo apt-get update
-            sudo apt-get remove -y containerd containerd.io
-            sudo apt-get install -y docker.io
+            sudo apt-get install -y apt-transport-https ca-certificates curl gnupg lsb-release
+            curl -fsSL https://get.docker.com -o get-docker.sh
+            sudo sh get-docker.sh
             sudo systemctl start docker
             sudo systemctl enable docker
             sudo systemctl status docker
