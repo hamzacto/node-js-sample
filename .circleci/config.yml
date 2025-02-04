@@ -33,12 +33,16 @@ jobs:
 
       - run:
           name: Wait for Service to Start
-          command: sleep 5  # Attente pour que l’app démarre
+          command: sleep 15  # Attente pour que l’app démarre
+
+      - run:
+          name: Debug Running Containers
+          command: docker ps -a    
 
       - run:
           name: Test Application Response
           command: |
-            RESPONSE=$(curl --write-out "%{http_code}" --silent --output /dev/null http://localhost:8080)
+            RESPONSE=$(curl --write-out "%{http_code}" --silent --output /dev/null http://host.docker.internal:8080)
             if [ "$RESPONSE" -ne 200 ]; then
               echo "Test failed, expected 200 but got $RESPONSE"
               exit 1
