@@ -56,6 +56,11 @@ jobs:
 
       # Build the Docker image with a tag that includes the commit SHA.
       - run:
+          name: Docker images list
+          command: |
+            docker images" .
+
+      - run:
           name: Build Docker image for push
           command: |
             docker build -t "$DOCKER_USERNAME/my-app:$CIRCLE_SHA1" .
