@@ -30,9 +30,9 @@ jobs:
           command: |
             RESPONSE=$(curl -s http://localhost:8080/)
             echo "Response: $RESPONSE"
-            # Check if the response contains "Express" (adjust as needed)
-            echo "$RESPONSE" | grep -q "Express" || {
-              echo "Test failed: 'Express' not found in response"
+            # Check if the response contains "BackSpace" (adjust as needed)
+            echo "$RESPONSE" | grep -q "BackSpace" || {
+              echo "Test failed: 'BackSpace' not found in response"
               docker logs my-app-instance
               exit 1
             }
