@@ -53,6 +53,12 @@ jobs:
           command: |
             docker images
 
+      - run:
+          name: Docker images list
+          command: |
+            echo "DOCKER_USERNAME: $DOCKER_USERNAME"
+            echo "CIRCLE_SHA1: $CIRCLE_SHA1"
+
       # Push the Docker image to Docker Hub.
       - run:
           name: Push Docker image
